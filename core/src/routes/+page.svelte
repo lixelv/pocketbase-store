@@ -13,8 +13,10 @@
 		[key: string]: any;
 	};
 
+	export let data: { test: SubRecord[] };
+
 	const pb = new PocketBase('https://pocketbase-control-hub.fly.dev/');
-	const pbList = pbStore.list<SubRecord[]>(pb, 'test', { sort: '-name,-created' });
+	const pbList = pbStore.list<SubRecord[]>(pb, 'test', { sort: '-name,-created' }, data.test);
 
 	let value = '';
 	pbList.collection.update;
