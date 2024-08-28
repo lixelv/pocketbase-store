@@ -47,5 +47,9 @@
 	"type": "module",
 	"dependencies": {
 		"pocketbase": "^0.21.5"
+	},
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/lixelv/pocketbase-svelte-store.git"
 	}
 }
