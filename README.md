@@ -4,9 +4,9 @@ PocketBaseStore is a Svelte-friendly wrapper for PocketBase that provides reacti
 
 ## Installation
 
-'''bash
+```bash
 npm install pocketbase-store
-'''
+```
 
 ## Key Features
 
@@ -20,38 +20,38 @@ npm install pocketbase-store
 
 ### Initializing PocketBaseStore
 
-'''typescript
+```typescript
 import { PocketBaseStore } from 'pocketbase-store';
 
 const pb = new PocketBaseStore('https://your-pocketbase-url.com');
-'''
+```
 
 ### Collection Store
 
 Create a reactive store for a collection:
 
-'''typescript
+```typescript
 import type { Record } from 'pocketbase-store';
 
 interface TodoItem extends Record {
-title: string;
-completed: boolean;
+	title: string;
+	completed: boolean;
 }
 
 const todoStore = pb.collection<TodoItem>('todos').store({
-sort: '-created,title', // Sort by creation date (descending) and then by title
-filter: 'completed = false', // Only fetch uncompleted todos
-expand: 'user', // Expand the user field
+	sort: '-created,title', // Sort by creation date (descending) and then by title
+	filter: 'completed = false', // Only fetch uncompleted todos
+	expand: 'user' // Expand the user field
 });
-'''
+```
 
 ### Item Store
 
 Create a reactive store for a single item:
 
-'''typescript
+```typescript
 const todoItemStore = pb.collection<TodoItem>('todos').itemStore(initialTodoItem);
-'''
+```
 
 ### Options
 
@@ -62,60 +62,58 @@ const todoItemStore = pb.collection<TodoItem>('todos').itemStore(initialTodoItem
 
 ### Full Todo App Example
 
-'''svelte
-
+```svelte
 <script lang="ts">
-import { PocketBaseStore } from 'pocketbase-store';
-import { onMount } from 'svelte';
-import type { Writable } from 'svelte/store';
+	import { PocketBaseStore } from 'pocketbase-store';
+	import { onMount } from 'svelte';
+	import type { Writable } from 'svelte/store';
 
-interface TodoItem {
- id: string;
- title: string;
- completed: boolean;
-}
+	interface TodoItem {
+		id: string;
+		title: string;
+		completed: boolean;
+	}
 
-let todoStore: Writable<TodoItem[]> & { data: any };
-let newTodoTitle = '';
+	let todoStore: Writable<TodoItem[]> & { data: any };
+	let newTodoTitle = '';
 
-onMount(() => {
- const pb = new PocketBaseStore('https://your-pocketbase-url.com');
- todoStore = pb.collection<TodoItem>('todos').store({
-   sort: '-created',
-   filter: 'completed = false'
- });
-});
+	onMount(() => {
+		const pb = new PocketBaseStore('https://your-pocketbase-url.com');
+		todoStore = pb.collection<TodoItem>('todos').store({
+			sort: '-created',
+			filter: 'completed = false'
+		});
+	});
 
-function addTodo() {
- if (newTodoTitle.trim()) {
-   todoStore.data.create({ title: newTodoTitle, completed: false });
-   newTodoTitle = '';
- }
-}
+	function addTodo() {
+		if (newTodoTitle.trim()) {
+			todoStore.data.create({ title: newTodoTitle, completed: false });
+			newTodoTitle = '';
+		}
+	}
 
-function toggleTodo(todo: TodoItem) {
- todoStore.data.update({ ...todo, completed: !todo.completed });
-}
+	function toggleTodo(todo: TodoItem) {
+		todoStore.data.update({ ...todo, completed: !todo.completed });
+	}
 
-function deleteTodo(id: string) {
- todoStore.data.delete(id);
-}
+	function deleteTodo(id: string) {
+		todoStore.data.delete(id);
+	}
 </script>
 
 <input bind:value={newTodoTitle} placeholder="New todo" />
 <button on:click={addTodo}>Add Todo</button>
 
 {#if todoStore}
-{#each $todoStore as todo}
-
-   <div>
-     <input type="checkbox" checked={todo.completed} on:change={() => toggleTodo(todo)} />
-     <span>{todo.title}</span>
-     <button on:click={() => deleteTodo(todo.id)}>Delete</button>
-   </div>
- {/each}
+	{#each $todoStore as todo}
+		<div>
+			<input type="checkbox" checked={todo.completed} on:change={() => toggleTodo(todo)} />
+			<span>{todo.title}</span>
+			<button on:click={() => deleteTodo(todo.id)}>Delete</button>
+		</div>
+	{/each}
 {/if}
-'''
+```
 
 This example demonstrates:
 
