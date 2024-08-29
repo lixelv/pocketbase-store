@@ -1,168 +1,127 @@
 # PocketBaseStore Documentation
 
-PocketBaseStore is a library that extends PocketBase functionality with Svelte stores, providing reactive data management for your PocketBase collections.
+PocketBaseStore is a Svelte-friendly wrapper for PocketBase that provides reactive stores for collections and individual records.
 
 ## Installation
 
-```bash
+'''bash
 npm install pocketbase-store
-```
+'''
+
+## Key Features
+
+1. Collection Stores
+2. Item Stores
+3. Real-time updates
+4. Sorting and filtering
+5. Type-safe with generics
 
 ## Usage
 
 ### Initializing PocketBaseStore
 
-First, create an instance of PocketBaseStore:
-
-```typescript
+'''typescript
 import { PocketBaseStore } from 'pocketbase-store';
 
 const pb = new PocketBaseStore('https://your-pocketbase-url.com');
-```
+'''
 
-### Creating a Collection Store
+### Collection Store
 
-To create a reactive store for a collection:
+Create a reactive store for a collection:
 
-```typescript
-const todoStore = pb.collection('todos').store<TodoItem[]>({ sort: '-created' });
-```
+'''typescript
+import type { Record } from 'pocketbase-store';
 
-This creates a Svelte store that automatically updates when the collection changes.
+interface TodoItem extends Record {
+title: string;
+completed: boolean;
+}
 
-### Using the Store in a Svelte Component
+const todoStore = pb.collection<TodoItem>('todos').store({
+sort: '-created,title', // Sort by creation date (descending) and then by title
+filter: 'completed = false', // Only fetch uncompleted todos
+expand: 'user', // Expand the user field
+});
+'''
 
-```svelte
+### Item Store
+
+Create a reactive store for a single item:
+
+'''typescript
+const todoItemStore = pb.collection<TodoItem>('todos').itemStore(initialTodoItem);
+'''
+
+### Options
+
+- `sort`: Specify sorting order (e.g., '-created,title')
+- `filter`: Apply filters to the query
+- `expand`: Expand relations
+- `fields`: Specify which fields to return
+
+### Full Todo App Example
+
+'''svelte
+
 <script lang="ts">
-	import { PocketBaseStore } from 'pocketbase-store';
-	import { onMount } from 'svelte';
+import { PocketBaseStore } from 'pocketbase-store';
+import { onMount } from 'svelte';
+import type { Writable } from 'svelte/store';
 
-	type TodoItem = {
-		id: string;
-		title: string;
-		completed: boolean;
-	};
+interface TodoItem {
+ id: string;
+ title: string;
+ completed: boolean;
+}
 
-	let todoStore;
+let todoStore: Writable<TodoItem[]> & { data: any };
+let newTodoTitle = '';
 
-	onMount(() => {
-		const pb = new PocketBaseStore('https://your-pocketbase-url.com');
-		todoStore = pb.collection('todos').store<TodoItem[]>({ sort: '-created' });
-	});
+onMount(() => {
+ const pb = new PocketBaseStore('https://your-pocketbase-url.com');
+ todoStore = pb.collection<TodoItem>('todos').store({
+   sort: '-created',
+   filter: 'completed = false'
+ });
+});
+
+function addTodo() {
+ if (newTodoTitle.trim()) {
+   todoStore.data.create({ title: newTodoTitle, completed: false });
+   newTodoTitle = '';
+ }
+}
+
+function toggleTodo(todo: TodoItem) {
+ todoStore.data.update({ ...todo, completed: !todo.completed });
+}
+
+function deleteTodo(id: string) {
+ todoStore.data.delete(id);
+}
 </script>
+
+<input bind:value={newTodoTitle} placeholder="New todo" />
+<button on:click={addTodo}>Add Todo</button>
 
 {#if todoStore}
-	{#each $todoStore as todo}
-		<div>
-			<input type="checkbox" bind:checked={todo.completed} />
-			{todo.title}
-		</div>
-	{/each}
+{#each $todoStore as todo}
+
+   <div>
+     <input type="checkbox" checked={todo.completed} on:change={() => toggleTodo(todo)} />
+     <span>{todo.title}</span>
+     <button on:click={() => deleteTodo(todo.id)}>Delete</button>
+   </div>
+ {/each}
 {/if}
-```
+'''
 
-### Adding Items to the Collection
+This example demonstrates:
 
-To add a new item to the collection:
+- Creating a typed collection store
+- Real-time updates
+- Adding, updating, and deleting items
+- Sorting and filtering
 
-```svelte
-<script lang="ts">
-	let newTodoTitle = '';
-
-	function addTodo() {
-		todoStore.data.create({ title: newTodoTitle, completed: false });
-		newTodoTitle = '';
-	}
-</script>
-
-<input bind:value={newTodoTitle} />
-<button on:click={addTodo}>Add Todo</button>
-```
-
-### Updating Items in the Collection
-
-To update an existing item:
-
-```svelte
-<script lang="ts">
-	function updateTodo(todo: TodoItem) {
-		todoStore.data.update(todo);
-	}
-</script>
-
-{#each $todoStore as todo}
-	<div>
-		<input type="checkbox" bind:checked={todo.completed} on:change={() => updateTodo(todo)} />
-		{todo.title}
-	</div>
-{/each}
-```
-
-### Deleting Items from the Collection
-
-To delete an item from the collection:
-
-```svelte
-<script lang="ts">
-	function deleteTodo(id: string) {
-		todoStore.data.delete(id);
-	}
-</script>
-
-{#each $todoStore as todo}
-	<div>
-		{todo.title}
-		<button on:click={() => deleteTodo(todo.id)}>Delete</button>
-	</div>
-{/each}
-```
-
-## API Reference
-
-### PocketBaseStore
-
-Extends the PocketBase class with additional functionality.
-
-#### Methods
-
-- `collection(idOrName: string): RecordServiceStore<M>`
-  Returns a RecordServiceStore for the specified collection.
-
-### RecordServiceStore
-
-Extends RecordService with additional store functionality.
-
-#### Methods
-
-- `store<T extends Record[]>(options?: SendOptions, initialValue?: T): Writable<T> & { data: { create: Function, update: Function, delete: Function } }`
-  Creates a Svelte store for the collection with methods for creating, updating, and deleting records.
-
-- `itemStore<T extends Record>(initialValue: T): Writable<T>`
-  Creates a Svelte store for a single record.
-
-### SendOptions
-
-Options for configuring the store:
-
-- `expand?: string`
-- `fields?: string`
-- `filter?: string`
-- `sort?: string`
-- `expirationTime?: number`
-
-## Best Practices
-
-1. Initialize PocketBaseStore in an onMount callback to ensure it's only created on the client-side.
-2. Use TypeScript interfaces or types for your records to ensure type safety.
-3. Utilize the sort option when creating stores to keep your data organized.
-4. Handle loading states appropriately, as initial data fetching is asynchronous.
-
-## Troubleshooting
-
-If you encounter issues with reactivity:
-
-1. Ensure you're using the store value with the $ prefix (e.g., $todoStore).
-2. Check that you're not mutating the store data directly. Always use the provided methods (create, update, delete) to modify data.
-3. Verify that your PocketBase server is running and accessible.
-
-For more advanced usage and configuration options, refer to the PocketBase documentation.
+Note: The store automatically updates when changes occur in the database, providing real-time functionality.
