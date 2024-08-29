@@ -1,6 +1,7 @@
 <script lang="ts">
-	import PocketBase from 'pocketbase';
-	import { pbStore } from '$lib/index.ts';
+	import { PocketBaseStore } from '$lib/index.js';
+	import { onMount } from 'svelte';
+	import { writable, type Writable } from 'svelte/store';
 
 	type SubRecord = {
 		id: string;
@@ -13,13 +14,14 @@
 		[key: string]: any;
 	};
 
-	export let data: { test: SubRecord[] };
+	let pbList = writable([] as SubRecord[]) as Writable<SubRecord[]> & { data: any };
 
-	const pb = new PocketBase('https://pocketbase-control-hub.fly.dev/');
-	const pbList = pbStore.list<SubRecord[]>(pb, 'test', { sort: '-name,-created' }, data.test);
+	onMount(() => {
+		const pb = new PocketBaseStore('https://pocketbase-control-hub.fly.dev/');
+		pbList = pb.collection('test').store<SubRecord[]>({ sort: '-name,-created' });
+	});
 
 	let value = '';
-	pbList.collection.update;
 </script>
 
 {#each $pbList as item, index}
@@ -37,4 +39,4 @@
 {/each}
 
 <input bind:value />
-<button on:click={() => pbList.collection.create({ name: value, desc: 't' })}>Add</button>
+<button on:click={() => pbList.data.create({ name: value, desc: 't' })}>Add</button>

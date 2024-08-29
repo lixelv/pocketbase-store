@@ -1,58 +1,178 @@
-# create-svelte
+# PocketBaseStore Documentation
 
-Everything you need to build a Svelte library, powered by [`create-svelte`](https://github.com/sveltejs/kit/tree/main/packages/create-svelte).
+PocketBaseStore is a library that extends PocketBase functionality with Svelte stores, providing reactive data management for your PocketBase collections.
 
-Read more about creating a library [in the docs](https://kit.svelte.dev/docs/packaging).
+## Installation
 
-## Creating a project
+'''bash
+npm install pocketbase-store
+'''
 
-If you're seeing this, you've probably already done this step. Congrats!
+## Usage
 
-```bash
-# create a new project in the current directory
-npm create svelte@latest
+### Initializing PocketBaseStore
 
-# create a new project in my-app
-npm create svelte@latest my-app
-```
+First, create an instance of PocketBaseStore:
 
-## Developing
+'''typescript
+import { PocketBaseStore } from 'pocketbase-store';
 
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
+const pb = new PocketBaseStore('https://your-pocketbase-url.com');
+'''
 
-```bash
-npm run dev
+### Creating a Collection Store
 
-# or start the server and open the app in a new browser tab
-npm run dev -- --open
-```
+To create a reactive store for a collection:
 
-Everything inside `src/lib` is part of your library, everything inside `src/routes` can be used as a showcase or preview app.
+'''typescript
+const todoStore = pb.collection('todos').store<TodoItem[]>({ sort: '-created' });
+'''
 
-## Building
+This creates a Svelte store that automatically updates when the collection changes.
 
-To build your library:
+### Using the Store in a Svelte Component
 
-```bash
-npm run package
-```
+'''svelte
 
-To create a production version of your showcase app:
+<script lang="ts">
+import { PocketBaseStore } from 'pocketbase-store';
+import { onMount } from 'svelte';
 
-```bash
-npm run build
-```
+type TodoItem = {
+  id: string;
+  title: string;
+  completed: boolean;
+};
 
-You can preview the production build with `npm run preview`.
+let todoStore;
 
-> To deploy your app, you may need to install an [adapter](https://kit.svelte.dev/docs/adapters) for your target environment.
+onMount(() => {
+  const pb = new PocketBaseStore('https://your-pocketbase-url.com');
+  todoStore = pb.collection('todos').store<TodoItem[]>({ sort: '-created' });
+});
+</script>
 
-## Publishing
+{#if todoStore}
+{#each $todoStore as todo}
+<div>
+<input type="checkbox" bind:checked={todo.completed} />
+{todo.title}
+</div>
+{/each}
+{/if}
+'''
 
-Go into the `package.json` and give your package the desired name through the `"name"` option. Also consider adding a `"license"` field and point it to a `LICENSE` file which you can create from a template (one popular option is the [MIT license](https://opensource.org/license/mit/)).
+### Adding Items to the Collection
 
-To publish your library to [npm](https://www.npmjs.com):
+To add a new item to the collection:
 
-```bash
-npm publish
-```
+'''svelte
+
+<script lang="ts">
+let newTodoTitle = '';
+
+function addTodo() {
+  todoStore.data.create({ title: newTodoTitle, completed: false });
+  newTodoTitle = '';
+}
+</script>
+
+<input bind:value={newTodoTitle} />
+<button on:click={addTodo}>Add Todo</button>
+'''
+
+### Updating Items in the Collection
+
+To update an existing item:
+
+'''svelte
+
+<script lang="ts">
+function updateTodo(todo: TodoItem) {
+  todoStore.data.update(todo);
+}
+</script>
+
+{#each $todoStore as todo}
+
+  <div>
+    <input 
+      type="checkbox" 
+      bind:checked={todo.completed} 
+      on:change={() => updateTodo(todo)}
+    />
+    {todo.title}
+  </div>
+{/each}
+'''
+
+### Deleting Items from the Collection
+
+To delete an item from the collection:
+
+'''svelte
+
+<script lang="ts">
+function deleteTodo(id: string) {
+  todoStore.data.delete(id);
+}
+</script>
+
+{#each $todoStore as todo}
+
+  <div>
+    {todo.title}
+    <button on:click={() => deleteTodo(todo.id)}>Delete</button>
+  </div>
+{/each}
+'''
+
+## API Reference
+
+### PocketBaseStore
+
+Extends the PocketBase class with additional functionality.
+
+#### Methods
+
+- `collection(idOrName: string): RecordServiceStore<M>`
+  Returns a RecordServiceStore for the specified collection.
+
+### RecordServiceStore
+
+Extends RecordService with additional store functionality.
+
+#### Methods
+
+- `store<T extends Record[]>(options?: SendOptions, initialValue?: T): Writable<T> & { data: { create: Function, update: Function, delete: Function } }`
+  Creates a Svelte store for the collection with methods for creating, updating, and deleting records.
+
+- `itemStore<T extends Record>(initialValue: T): Writable<T>`
+  Creates a Svelte store for a single record.
+
+### SendOptions
+
+Options for configuring the store:
+
+- `expand?: string`
+- `fields?: string`
+- `filter?: string`
+- `sort?: string`
+- `expirationTime?: number`
+
+## Best Practices
+
+1. Initialize PocketBaseStore in an onMount callback to ensure it's only created on the client-side.
+2. Use TypeScript interfaces or types for your records to ensure type safety.
+3. Utilize the sort option when creating stores to keep your data organized.
+4. Handle loading states appropriately, as initial data fetching is asynchronous.
+
+## Troubleshooting
+
+If you encounter issues with reactivity:
+
+1. Ensure you're using the store value with the $ prefix (e.g., $todoStore).
+2. Check that you're not mutating the store data directly. Always use the provided methods (create, update, delete) to modify data.
+3. Verify that your PocketBase server is running and accessible.
+
+For more advanced usage and configuration options, refer to the PocketBase documentation.
