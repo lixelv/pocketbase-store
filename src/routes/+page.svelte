@@ -66,7 +66,7 @@
 	export let data: { test: TestItem[] };
 
 	const pb = new PocketBase('https://pocketbase-control-hub.fly.dev/');
-	const testStore = pb.collection('test').store<TestItem>({ sort: '-name,created' }, data.test);
+	const testStore = pb.collection('test').store<TestItem>({ sort: '-name,created' });
 
 	let value = '';
 </script>

@@ -132,7 +132,7 @@ This `ItemStore` class is wrapped in `pb.collection('test').storeItem()`, here i
 	const itemStore = pb.collection('example').storeItem('RECORD_ID');
 </script>
 
-<input type="text" bind:value={$itemStore} />
+<input type="text" bind:value={$itemStore.name} />
 ```
 
 > [!NOTE]
