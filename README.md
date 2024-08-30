@@ -1,6 +1,8 @@
-# PocketBaseStore Documentation
+# pocketbase-store
 
-PocketBaseStore is a Svelte-friendly wrapper for PocketBase that provides reactive stores for collections and individual records.
+## Overview
+
+This library was created to make using pocketbase **realtime data** in svelte apps easier, by providing reactive stores for collections and individual records.
 
 ## Installation
 
@@ -8,118 +10,68 @@ PocketBaseStore is a Svelte-friendly wrapper for PocketBase that provides reacti
 npm install pocketbase-store
 ```
 
-## Key Features
-
-1. Collection Stores
-2. Item Stores
-3. Real-time updates
-4. Sorting and filtering
-5. Type-safe with generics
-
 ## Usage
 
-### Initializing PocketBaseStore
-
-```typescript
-import { PocketBaseStore } from 'pocketbase-store';
-
-const pb = new PocketBaseStore('https://your-pocketbase-url.com');
-```
-
-### Collection Store
-
-Create a reactive store for a collection:
-
-```typescript
-import type { Record } from 'pocketbase-store';
-
-interface TodoItem extends Record {
-	title: string;
-	completed: boolean;
-}
-
-const todoStore = pb.collection<TodoItem>('todos').store({
-	sort: '-created,title', // Sort by creation date (descending) and then by title
-	filter: 'completed = false', // Only fetch uncompleted todos
-	expand: 'user' // Expand the user field
-});
-```
-
-### Item Store
-
-Create a reactive store for a single item:
-
-```typescript
-const todoItemStore = pb.collection<TodoItem>('todos').itemStore(initialTodoItem);
-```
-
-### Options
-
-- `sort`: Specify sorting order (e.g., '-created,title')
-- `filter`: Apply filters to the query
-- `expand`: Expand relations
-- `fields`: Specify which fields to return
-
-### Full Todo App Example
+Here is example of basic usage for storing some words and sorting them by name and created fields:
 
 ```svelte
 <script lang="ts">
-	import { PocketBaseStore } from 'pocketbase-store';
-	import { onMount } from 'svelte';
-	import type { Writable } from 'svelte/store';
+	import PocketBase from 'pocketbase-store';
 
-	interface TodoItem {
+	type TestItem = {
 		id: string;
-		title: string;
-		completed: boolean;
-	}
+		created: string;
+		updated: string;
+		collectionId: string;
+		collectionName: string;
+		name: string;
+	};
 
-	let todoStore: Writable<TodoItem[]> & { data: any };
-	let newTodoTitle = '';
+	const pb = new PocketBase('https://your-pocketbase-url.com');
+	const testStore = pb.collection('example').store<TestItem>({ sort: '-name,created' });
 
-	onMount(() => {
-		const pb = new PocketBaseStore('https://your-pocketbase-url.com');
-		todoStore = pb.collection<TodoItem>('todos').store({
-			sort: '-created',
-			filter: 'completed = false'
-		});
-	});
-
-	function addTodo() {
-		if (newTodoTitle.trim()) {
-			todoStore.data.create({ title: newTodoTitle, completed: false });
-			newTodoTitle = '';
-		}
-	}
-
-	function toggleTodo(todo: TodoItem) {
-		todoStore.data.update({ ...todo, completed: !todo.completed });
-	}
-
-	function deleteTodo(id: string) {
-		todoStore.data.delete(id);
-	}
+	let value = '';
 </script>
 
-<input bind:value={newTodoTitle} placeholder="New todo" />
-<button on:click={addTodo}>Add Todo</button>
-
-{#if todoStore}
-	{#each $todoStore as todo}
-		<div>
-			<input type="checkbox" checked={todo.completed} on:change={() => toggleTodo(todo)} />
-			<span>{todo.title}</span>
-			<button on:click={() => deleteTodo(todo.id)}>Delete</button>
-		</div>
-	{/each}
-{/if}
+<form
+	on:submit|preventDefault={() => {
+		testStore.create({ name: value });
+		value = '';
+	}}
+>
+	<input type="text" bind:value />
+	<button type="submit">Add</button>
+</form>
+{#each $testStore as item (item.id)}
+	{item.name}
+	<button on:click={() => testStore.delete(item)}>Delete</button>
+	<br />
+{/each}
 ```
 
-This example demonstrates:
+## Elements
 
-- Creating a typed collection store
-- Real-time updates
-- Adding, updating, and deleting items
-- Sorting and filtering
+### Collection Store
 
-Note: The store automatically updates when changes occur in the database, providing real-time functionality.
+#### Overview
+
+This store is wrapped in `pb.collection('test').store()`, here is basic usage:
+
+```svelte
+<script lang="ts">
+	import PocketBase from 'pocketbase-store';
+
+	const pb = new PocketBase('https://your-pocketbase-url.com');
+	const collectionStore = pb.collection('example').store();
+</script>
+
+{#each $collectionStore as item (item.id)}
+	<!-- ... -->
+{/each}
+```
+
+And data will refresh automatically when it changes, thanks for realtime data support in pocketbase!
+
+#### Generics
+
+Also you can use basic generics in stores, the example is in [Usage](#usage) section:

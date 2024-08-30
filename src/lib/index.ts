@@ -1,31 +1,20 @@
 import PocketBase, { RecordService, type RecordModel } from 'pocketbase';
-import type { Writable } from 'svelte/store';
 
-import type { SendOptions, Record } from './types.js';
-import { createCollectionStore, createItemStore } from './stores.js';
+import type { CollectionSendOptions, ItemSendOptions, Record } from '$lib/types.js';
+import { CollectionStore } from '$lib/stores/collection.js';
+import { ItemStore } from '$lib/stores/item.js';
 
-class RecordServiceStore<M extends RecordModel> extends RecordService<M> {
+export class RecordServiceStore<M extends RecordModel> extends RecordService<M> {
 	constructor(pb: PocketBase, collectionIdOrName: string) {
 		super(pb, collectionIdOrName);
 	}
 
-	store<T extends Record[]>(options?: SendOptions, initialValue?: T) {
-		return createCollectionStore<T>(
-			this.client,
-			this.collectionIdOrName,
-			options,
-			initialValue
-		) as Writable<T> & {
-			data: {
-				create: (value: { [key: string]: any }) => void;
-				update: (value: T[number]) => void;
-				delete: (id: string) => void;
-			};
-		};
+	store<T extends Record>(options?: CollectionSendOptions, initialValue?: T[]) {
+		return new CollectionStore<T>(this.client, this.collectionIdOrName, options, initialValue);
 	}
 
-	itemStore<T extends Record>(initialValue: T) {
-		return createItemStore<T>(this.client, initialValue) as Writable<T>;
+	storeItem<T extends Record>(initialValue: T | string, options?: ItemSendOptions) {
+		return new ItemStore<T>(this.client, this.collectionIdOrName, initialValue, options);
 	}
 }
 
@@ -36,4 +25,7 @@ export class PocketBaseStore extends PocketBase {
 }
 
 export { PocketBaseStore as default };
-export { createCollectionStore, createItemStore };
+
+export * from './types.js';
+export * from './stores/collection.js';
+export * from './utils.js';

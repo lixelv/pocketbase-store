@@ -7,10 +7,16 @@ export type Record = {
 	[key: string]: any;
 };
 
-export type SendOptions = {
+export type CollectionSendOptions = {
 	expand?: string;
 	fields?: string;
 	filter?: string;
 	sort?: string;
+	expirationTime?: number;
+};
+
+export type ItemSendOptions = {
+	expand?: string;
+	fields?: string;
 	expirationTime?: number;
 };

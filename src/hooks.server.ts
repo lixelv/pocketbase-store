@@ -1,9 +1,10 @@
-import type { Handle } from "@sveltejs/kit"
-import PocketBase from "pocketbase"
+import type { Handle } from '@sveltejs/kit';
+import PocketBase from 'pocketbase';
 
-const pb = new PocketBase("https://pocketbase-control-hub.fly.dev/")
+const pb = new PocketBase('https://pocketbase-control-hub.fly.dev/');
+pb.autoCancellation(false);
 
 export const handle: Handle = async ({ event, resolve }) => {
-    event.locals.pb = pb
-    return resolve(event)
-}
+	event.locals.pb = pb;
+	return resolve(event);
+};
