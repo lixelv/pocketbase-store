@@ -110,6 +110,7 @@ type CollectionSendOptions = {
 	filter?: string; // string like 'name = "test"', more info here: https://pocketbase.io/docs/api-rules-and-filters/
 	sort?: string; // string like '-name,created', more info in pocketbase admin ui docs
 	expirationTime?: number; // time in milliseconds then data in cache will be deleted (by default 4 seconds)
+	autoSubGetData?: boolean; // if you want to manage getting data and subscribing on pocketbase by methods `getData` and `subscribeOnPocketBase`, set it to `false`, by default it's `true`
 };
 
 // Every T generic type better to have all Record fields
@@ -163,7 +164,6 @@ When creating new ItemStore, you can add next arguments:
 
 - `initialValue (required)`: `T | string`, used for initializing new item, can hold string like `'RECORD_ID'` and object like `{ id: 'RECORD_ID', collectionId: 'COLLECTION_ID', collectionName: 'COLLECTION_NAME', etc.}`.
 - `options`: `ItemSendOptions`, you can find it in [Types](#types) section.
-- `autoSubGetData`: `boolean`, if you want to manage getting data and subscribing on pocketbase by methods `getData` and `subscribeOnPocketBase`, set it to `false`, by default it's `true`.
 
 #### Types
 
@@ -172,6 +172,7 @@ type ItemSendOptions = {
 	expand?: string; // string like 'name,created', more info in pocketbase admin ui docs
 	fields?: string; // string like 'name,created' for sorting witch fields to send
 	expirationTime?: number; // time in milliseconds then data in cache will be deleted (by default 4 seconds)
+	autoSubGetData?: boolean; // if you want to manage getting data and subscribing on pocketbase by methods `getData` and `subscribeOnPocketBase`, set it to `false`, by default it's `true`
 };
 ```
 

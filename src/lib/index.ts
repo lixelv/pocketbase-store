@@ -10,11 +10,7 @@ export class RecordServiceStore<M extends RecordModel> extends RecordService<M> 
 		super(pb, collectionIdOrName);
 	}
 
-	store<T extends Record>(
-		options?: CollectionSendOptions,
-		initialValue?: T[],
-		autoSubGetData = true
-	) {
+	store<T extends Record>(options?: CollectionSendOptions, initialValue?: T[]) {
 		const result = new CollectionStore<T>(
 			this.client,
 			this.collectionIdOrName,
@@ -22,7 +18,7 @@ export class RecordServiceStore<M extends RecordModel> extends RecordService<M> 
 			initialValue
 		);
 
-		if (autoSubGetData) {
+		if (options?.autoSubGetData ? options.autoSubGetData : true) {
 			if (browser) {
 				if (!result.loaded) {
 					result.getData();
@@ -34,14 +30,10 @@ export class RecordServiceStore<M extends RecordModel> extends RecordService<M> 
 		return result;
 	}
 
-	storeItem<T extends Record>(
-		initialValue: T | string,
-		options?: ItemSendOptions,
-		autoSubGetData = true
-	) {
+	storeItem<T extends Record>(initialValue: T | string, options?: ItemSendOptions) {
 		const result = new ItemStore<T>(this.client, this.collectionIdOrName, initialValue, options);
 
-		if (autoSubGetData) {
+		if (options?.autoSubGetData ? options.autoSubGetData : true) {
 			if (browser) {
 				if (!result.loaded) {
 					result.getData();

@@ -13,10 +13,12 @@ export type CollectionSendOptions = {
 	filter?: string;
 	sort?: string;
 	expirationTime?: number;
+	autoSubGetData?: boolean;
 };
 
 export type ItemSendOptions = {
 	expand?: string;
 	fields?: string;
 	expirationTime?: number;
+	autoSubGetData?: boolean;
 };
