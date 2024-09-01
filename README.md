@@ -80,6 +80,9 @@ Also you can use basic generics in stores, the example is in [Usage](#usage) sec
 
 I've added some additional methods in this store:
 
+- `getData`: Used for getting data from pocketbase. Returns nothing. By default when `autoSubGetData = true` lunches when initialized, method is async.
+- `subscribeOnPocketBase`: Used for subscribing on pocketbase. Returns nothing. By default when `autoSubGetData = true` lunches when initialized, method is async.
+
 - `create`: Used for changing data in the store first, and after in pocketbase. Returns nothing.
 - `update_`: Used for updating data in the store first, and after in pocketbase. Returns nothing. Also named `update_` because `update` is already used in `writable`, sadly :(.
 - `delete`: Used for deleting data in the store first, and after in pocketbase. Returns nothing.
@@ -96,6 +99,7 @@ You can add 2 additional arguments to `store` method:
 
 - `options`: `CollectionSendOptions`, you can find it in [Types](#types) section.
 - `initialValue`: `T[]`, it's an array of objects that will be stored in the store, instead of calling `getFullList` method from pocketbase.
+- `autoSubGetData`: `boolean`, if you want to manage getting data and subscribing on pocketbase by methods `getData` and `subscribeOnPocketBase`, set it to `false`, by default it's `true`.
 
 #### Types
 
@@ -133,25 +137,33 @@ This `ItemStore` class is wrapped in `pb.collection('test').storeItem()`, here i
 </script>
 
 <input type="text" bind:value={$itemStore.name} />
+
+<button on:click={async () => await $itemStore.send()}>Send</button>
 ```
 
 > [!NOTE]
-> When you write something in input, it will be changed in store, and in pocketbase, witch is really useful.
+> When you write something in input, it will be changed in store, and on calling `$itemStore.send()`, it will be sent to pocketbase.
 
 #### Generics
 
 Here is supported generics, all I can say.
 
-#### Writible
+#### Additional methods
 
-Here is no additional methods. All interaction with pocketbase provided by svelte writable store.
+I've added some additional methods in this store:
+
+- `getData`: Used for getting data from pocketbase. Returns nothing. By default when `autoSubGetData = true` lunches when initialized, method is async.
+- `subscribeOnPocketBase`: Used for subscribing on pocketbase. Returns nothing. By default when `autoSubGetData = true` lunches when initialized, method is async.
+
+- `send`: Used for refreshing data in the pocketbase.
 
 #### Options
 
 When creating new ItemStore, you can add next arguments:
 
-- `initialValue (required)`: `T | string`, used for initializing new item, can hold string like 'RECORD_ID' and object like `{ id: 'RECORD_ID', collectionId: 'COLLECTION_ID', collectionName: 'COLLECTION_NAME', etc.}`.
+- `initialValue (required)`: `T | string`, used for initializing new item, can hold string like `'RECORD_ID'` and object like `{ id: 'RECORD_ID', collectionId: 'COLLECTION_ID', collectionName: 'COLLECTION_NAME', etc.}`.
 - `options`: `ItemSendOptions`, you can find it in [Types](#types) section.
+- `autoSubGetData`: `boolean`, if you want to manage getting data and subscribing on pocketbase by methods `getData` and `subscribeOnPocketBase`, set it to `false`, by default it's `true`.
 
 #### Types
 

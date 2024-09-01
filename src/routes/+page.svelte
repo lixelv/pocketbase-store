@@ -1,56 +1,3 @@
-<!-- <script lang="ts">
-	import { getDate, PocketBaseStore } from '$lib/index.js';
-
-	type TodoItem = {
-		id: string;
-		created: string;
-		updated: string;
-		collectionId: string;
-		collectionName: string;
-		title: string;
-		completed: boolean;
-	};
-
-	let newTodoTitle = '';
-
-	const pb = new PocketBaseStore('https://pocketbase-control-hub.fly.dev/');
-	const todoStore = pb.collection('todos').store<TodoItem>({ sort: '-title,created' });
-
-	function addTodo() {
-		if (newTodoTitle.trim()) {
-			todoStore.create({ title: newTodoTitle, completed: false });
-			newTodoTitle = '';
-		}
-	}
-
-	function toggleTodo(todo: TodoItem, event: { target: { checked: boolean } }) {
-		todoStore.update({ ...todo, completed: event.target.checked });
-		);
-	}
-
-	function deleteTodo(todo: TodoItem) {
-		todoStore.delete(todo);
-	}
-
-	));
-</script>
-
-<input bind:value={newTodoTitle} placeholder="New todo" />
-<button on:click={addTodo}>Add Todo</button> -->
-
-<!-- {@debug $todoStore} -->
-
-<!-- {#if todoStore}
-	{#each $todoStore as todo (todo.id)}
-		<div>
-			<input type="checkbox" checked={todo.completed} />
-			<span>{todo.title}</span>
-			<button on:click={() => deleteTodo(todo)}>Delete</button>
-			{todo.created}
-		</div>
-	{/each}
-{/if} -->
-
 <script lang="ts">
 	import PocketBase from '$lib/index.js';
 
@@ -63,15 +10,20 @@
 		name: string;
 	};
 
-	export let data: { test: TestItem[] };
+	// export let data: { test: TestItem[] };
 
 	const pb = new PocketBase('https://pocketbase-control-hub.fly.dev/');
-	const testStore = pb.collection('test').store<TestItem>({ sort: '-name,created' });
+	pb.autoCancellation(false);
+	// const testStore = pb.collection('test').store<TestItem>({ sort: '-name,created' }, data.test);
+	const testStore = pb.collection('test').storeItem<TestItem>('roho6smphw8wl4e');
 
 	let value = '';
 </script>
 
-<form
+<input type="text" bind:value={$testStore.name} />
+<button on:click={async () => await testStore.send()}>Send</button>
+
+<!-- <form
 	on:submit|preventDefault={() => {
 		testStore.create({ name: value });
 		value = '';
@@ -81,7 +33,7 @@
 	<button type="submit">Add</button>
 </form>
 {#each $testStore as item}
-	{item.name}
+	{item.name}{item.id}
 	<button on:click={() => testStore.delete(item)}>Delete</button>
 	<br />
-{/each}
+{/each} -->

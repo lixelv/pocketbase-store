@@ -1,4 +1,5 @@
 import PocketBase, { RecordService, type RecordModel } from 'pocketbase';
+import { browser } from '$app/environment';
 
 import type { CollectionSendOptions, ItemSendOptions, Record } from '$lib/types.js';
 import { CollectionStore } from '$lib/stores/collection.js';
@@ -9,12 +10,47 @@ export class RecordServiceStore<M extends RecordModel> extends RecordService<M> 
 		super(pb, collectionIdOrName);
 	}
 
-	store<T extends Record>(options?: CollectionSendOptions, initialValue?: T[]) {
-		return new CollectionStore<T>(this.client, this.collectionIdOrName, options, initialValue);
+	store<T extends Record>(
+		options?: CollectionSendOptions,
+		initialValue?: T[],
+		autoSubGetData = true
+	) {
+		const result = new CollectionStore<T>(
+			this.client,
+			this.collectionIdOrName,
+			options,
+			initialValue
+		);
+
+		if (autoSubGetData) {
+			if (browser) {
+				if (!result.loaded) {
+					result.getData();
+				}
+				result.subscribeOnPocketBase();
+			}
+		}
+
+		return result;
 	}
 
-	storeItem<T extends Record>(initialValue: T | string, options?: ItemSendOptions) {
-		return new ItemStore<T>(this.client, this.collectionIdOrName, initialValue, options);
+	storeItem<T extends Record>(
+		initialValue: T | string,
+		options?: ItemSendOptions,
+		autoSubGetData = true
+	) {
+		const result = new ItemStore<T>(this.client, this.collectionIdOrName, initialValue, options);
+
+		if (autoSubGetData) {
+			if (browser) {
+				if (!result.loaded) {
+					result.getData();
+				}
+				result.subscribeOnPocketBase();
+			}
+		}
+
+		return result;
 	}
 }
 

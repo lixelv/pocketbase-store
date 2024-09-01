@@ -18,10 +18,11 @@ import { copy } from '$lib/utils.js';
 export class ItemStore<T extends Record> implements Writable<T> {
 	pb: PocketBase;
 	collection: string;
-	initialValue: T | string;
+	initialValue: T;
 	options?: ItemSendOptions;
 
 	id: string;
+	loaded: boolean;
 	#unsubscribe?: Unsubscriber;
 	#act: boolean;
 	#cache: Cache;
@@ -44,61 +45,56 @@ export class ItemStore<T extends Record> implements Writable<T> {
 		this.collection = collection;
 		this.initialValue = initialValue;
 		this.options = options;
+		this.loaded = loaded;
 
 		this.#act = true;
 		this.#cache = new Cache(options?.expirationTime || EXPIRATION_TIME);
 		this.#store = writable<T>(initialValue);
 
-		if (browser) {
-			if (!loaded) {
-				pb.collection(collection)
-					.getOne<T>(this.id, copy(options))
-					.then((data) => {
-						this.#store.set(data);
-					})
-					.catch((err) => {
-						console.error(err);
-					});
-			}
+		this.#store.subscribe((value) => {
+			this.initialValue = value;
+		});
+	}
 
-			pb.collection(collection)
-				.subscribe(
-					this.id,
-					({ action, record }) => {
-						const value = { action, record: { ...record, updated: '' } };
+	async getData() {
+		const data = await this.pb.collection(this.collection).getOne<T>(this.id, copy(this.options));
+		this.#store.set(data);
+	}
 
-						switch (action) {
-							case 'create':
-								console.log('WTF, how is that possible?');
-								break;
-							case 'update':
-								this.#act = false;
-								if (!this.#cache.has(value)) {
-									this.#store.set(record as T);
-									this.#cache.add(value);
-								} else {
-								}
-								this.#act = true;
-								break;
-							case 'delete':
-								this.#act = false;
-								this.#store.set({} as T);
-								this.#act = true;
-								break;
+	async subscribeOnPocketBase() {
+		this.#unsubscribe = await this.pb.collection(this.collection).subscribe(
+			this.id,
+			({ action, record }) => {
+				const value = { action, record: { ...record, updated: '' } };
+
+				switch (action) {
+					case 'create':
+						console.log('WTF, how is that possible?');
+						break;
+					case 'update':
+						this.#act = false;
+						if (!this.#cache.has(value)) {
+							this.#store.set(record as T);
+							this.#cache.add(value);
+						} else {
 						}
-					},
-					copy(options)
-				)
-				.then((unsub) => {
-					this.#unsubscribe = unsub;
-				});
-
-			this.#store.subscribe((data) => {
-				if (this.#act) {
-					this.pb.collection(collection).update(data.id, data);
+						this.#act = true;
+						break;
+					case 'delete':
+						this.#act = false;
+						this.#store.set({} as T);
+						this.#act = true;
+						break;
 				}
-			});
-		}
+			},
+			copy(this.options)
+		);
+	}
+
+	async send() {
+		await this.pb
+			.collection(this.collection)
+			.update(this.id, this.initialValue, copy(this.options));
 	}
 
 	set(value: T): void {

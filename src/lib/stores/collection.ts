@@ -1,4 +1,3 @@
-import { browser } from '$app/environment';
 import PocketBase from 'pocketbase';
 import {
 	writable,
@@ -22,8 +21,8 @@ export class CollectionStore<T extends Record> implements Writable<T[]> {
 	options?: CollectionSendOptions;
 
 	// #act: boolean;
+	loaded: boolean;
 	#unsubscribe?: Unsubscriber;
-	#prevValue?: Writable<T[]>;
 	#store: Writable<T[]>;
 	#cache: Cache;
 
@@ -37,37 +36,30 @@ export class CollectionStore<T extends Record> implements Writable<T[]> {
 		this.collection = collection;
 
 		this.options = options;
+		this.loaded = initialValue?.length ? true : false;
 
 		// TODO: add writable pocketbase store, now only readable
 		// this.#act = true;
 		this.#store = writable<T[]>(initialValue || ([] as unknown as T[]));
 		this.#cache = new Cache(options?.expirationTime || EXPIRATION_TIME);
+	}
 
-		if (browser) {
-			if (!initialValue) {
-				pb.collection(collection)
-					.getFullList<T>(copy(options))
-					.then((data) => {
-						this.#store.set(data);
-					})
-					.catch((err) => {
-						throw err;
-					});
-			}
+	async getData() {
+		const data = await this.pb.collection(this.collection).getFullList<T>(copy(this.options));
+		this.#store.set(data);
+	}
 
-			pb.collection(collection)
-				.subscribe(
-					'*',
-					({ action, record }) => {
-						this.handleSummary({ action, record } as {
-							action: 'create' | 'update' | 'delete';
-							record: T;
-						});
-					},
-					copy(options)
-				)
-				.then((unsubscribe) => (this.#unsubscribe = unsubscribe));
-		}
+	async subscribeOnPocketBase() {
+		this.#unsubscribe = await this.pb.collection(this.collection).subscribe(
+			'*',
+			({ action, record }) => {
+				this.handleSummary({ action, record } as {
+					action: 'create' | 'update' | 'delete';
+					record: T;
+				});
+			},
+			copy(this.options)
+		);
 	}
 
 	handleCreate(value: T) {
