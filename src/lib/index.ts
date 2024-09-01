@@ -18,7 +18,7 @@ export class RecordServiceStore<M extends RecordModel> extends RecordService<M> 
 			initialValue
 		);
 
-		if (options?.autoSubGetData ? options.autoSubGetData : true) {
+		if (options?.autoSubGetData !== undefined ? options.autoSubGetData : true) {
 			if (browser) {
 				if (!result.loaded) {
 					result.getData();
