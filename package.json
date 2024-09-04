@@ -1,6 +1,22 @@
 {
 	"name": "pocketbase-store",
-	"version": "0.1.3",
+	"version": "0.1.4",
+	"author": "Simon Efremenko",
+	"license": "MIT",
+	"description": "Svelte store for pocketbase collections and records",
+	"homepage": "https://github.com/lixelv/pocketbase-store",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/lixelv/pocketbase-store"
+	},
+	"keywords": [
+		"svelte",
+		"pocketbase",
+		"store",
+		"collection",
+		"record",
+		"database"
+	],
 	"scripts": {
 		"dev": "vite dev",
 		"build": "vite build && npm run package",
