@@ -15,7 +15,7 @@
 	const pb = new PocketBase('https://pocketbase-control-hub.fly.dev/');
 	pb.autoCancellation(false);
 	// const testStore = pb.collection('test').store<TestItem>({ sort: '-name,created' }, data.test);
-	const testStore = pb.collection('test').storeItem<TestItem>('roho6smphw8wl4e');
+	const testStore = pb.collection('test').storeItem<TestItem>('rhot1q2hgy03mkk');
 
 	let value = '';
 </script>

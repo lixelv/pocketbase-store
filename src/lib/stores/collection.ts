@@ -1,9 +1,18 @@
+let browser: boolean;
+
+try {
+	const { browser: browserModule } = await import('$app/environment');
+	browser = browserModule;
+} catch {
+	browser = true;
+}
+
 import PocketBase from 'pocketbase';
 import {
 	writable,
 	type Invalidator,
-	type Writable,
 	type Readable,
+	type Writable,
 	type Subscriber,
 	type Unsubscriber,
 	type Updater
@@ -15,7 +24,7 @@ import { Cache } from '$lib/cache.js';
 import { pocketBaseInsert } from '$lib/sorting.js';
 import { copy, getDate } from '$lib/utils.js';
 
-export class CollectionStore<T extends Record> implements Writable<T[]> {
+export class CollectionStore<T extends Record> implements Readable<T[]> {
 	pb: PocketBase;
 	collection: string;
 	options?: CollectionSendOptions;
@@ -42,6 +51,15 @@ export class CollectionStore<T extends Record> implements Writable<T[]> {
 		// this.#act = true;
 		this.#store = writable<T[]>(initialValue || ([] as unknown as T[]));
 		this.#cache = new Cache(options?.expirationTime || EXPIRATION_TIME);
+
+		if (options?.autoSubGetData ? options.autoSubGetData : true) {
+			if (browser) {
+				if (!this.loaded) {
+					this.getData();
+				}
+				this.subscribeOnPocketBase();
+			}
+		}
 	}
 
 	async getData() {

@@ -1,4 +1,12 @@
-import { browser } from '$app/environment';
+let browser: boolean;
+
+try {
+	const { browser: browserModule } = await import('$app/environment');
+	browser = browserModule;
+} catch {
+	browser = true;
+}
+
 import PocketBase from 'pocketbase';
 import {
 	writable,
@@ -54,6 +62,15 @@ export class ItemStore<T extends Record> implements Writable<T> {
 		this.#store.subscribe((value) => {
 			this.initialValue = value;
 		});
+
+		if (options?.autoSubGetData ? options.autoSubGetData : true) {
+			if (browser) {
+				if (!this.loaded) {
+					this.getData();
+				}
+				this.subscribeOnPocketBase();
+			}
+		}
 	}
 
 	async getData() {
