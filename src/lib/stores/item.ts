@@ -1,11 +1,13 @@
 let browser: boolean;
 
-try {
-	const { browser: browserModule } = await import('$app/environment');
-	browser = browserModule;
-} catch {
-	browser = true;
-}
+(async () => {
+	try {
+		const { browser: browserModule } = await import('$app/environment');
+		browser = browserModule;
+	} catch {
+		browser = true;
+	}
+})();
 
 import PocketBase from 'pocketbase';
 import {
