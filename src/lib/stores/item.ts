@@ -87,9 +87,6 @@ export class ItemStore<T extends Record> implements Writable<T> {
 				const value = { action, record: { ...record, updated: '' } };
 
 				switch (action) {
-					case 'create':
-						console.log('WTF, how is that possible?');
-						break;
 					case 'update':
 						this.#act = false;
 						if (!this.#cache.has(value)) {

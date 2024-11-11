@@ -1,5 +1,8 @@
 export async function load({ locals }) {
-	const result = await locals.pb.collection('test').getFullList({ sort: '-name,created' });
+	const result = await locals.pb.collection('computers').getFullList({
+		sort: '-updated',
+		filter: `region.name = "killme232" && region.team.name = "lixelv's team"`
+	});
 
-	return { test: result };
+	return { computers: result };
 }
