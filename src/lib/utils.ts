@@ -1,3 +1,5 @@
+import type { Writable } from 'svelte/store';
+
 export function copy<T>(obj: T): T | undefined {
 	if (!obj) {
 		return undefined;
@@ -59,4 +61,14 @@ export function findDifference<T>(
 		action: undefined,
 		record: undefined as T
 	};
+}
+
+export function getStore<T>(store: Writable<T>): T {
+	let result: T | undefined = undefined;
+
+	store.subscribe((value) => {
+		result = value;
+	});
+
+	return result as T;
 }

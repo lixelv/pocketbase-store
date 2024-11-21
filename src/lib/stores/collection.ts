@@ -24,7 +24,7 @@ import { EXPIRATION_TIME } from '$lib/constants.js';
 import type { Record, CollectionSendOptions } from '$lib/types.js';
 import { Cache } from '$lib/cache.js';
 import { pocketBaseInsert } from '$lib/sorting.js';
-import { copy, getDate } from '$lib/utils.js';
+import { copy, getDate, getStore } from '$lib/utils.js';
 
 export class CollectionStore<T extends Record> implements Readable<T[]> {
 	pb: PocketBase;
@@ -84,7 +84,9 @@ export class CollectionStore<T extends Record> implements Readable<T[]> {
 
 	handleCreate(value: T) {
 		this.#store.update((s) => {
-			s = s.filter((item: { id: string }) => item.id !== 'justCreated') as T[];
+			s = s.filter(
+				(item: { id: string }) => item.id !== 'justCreated' && item.id !== value.id
+			) as T[];
 
 			if (this.options?.sort) {
 				pocketBaseInsert(s, value, this.options?.sort);
@@ -156,17 +158,40 @@ export class CollectionStore<T extends Record> implements Readable<T[]> {
 		const insertValue = { ...value, id: 'justCreated', created: getDate(), updated: getDate() };
 		this.handleCreate(insertValue as unknown as T);
 
-		await this.pb.collection(this.collection).create(value);
+		try {
+			await this.pb.collection(this.collection).create(value);
+		} catch (error) {
+			this.handleDelete(insertValue as unknown as T, false);
+			throw error;
+		}
 	}
 
 	async update_(value: T) {
+		const previousValue = getStore<T[]>(this.#store).find(
+			(item: { id: string }) => item.id === value.id
+		);
 		this.handleUpdate(value, false);
-		await this.pb.collection(this.collection).update(value.id, value);
+
+		try {
+			await this.pb.collection(this.collection).update(value.id, value);
+		} catch (error) {
+			this.handleUpdate(previousValue as T, false);
+			throw error;
+		}
 	}
 
 	async delete(value: T) {
+		const previousValue = getStore<T[]>(this.#store).find(
+			(item: { id: string }) => item.id === value.id
+		);
 		this.handleDelete(value);
-		await this.pb.collection(this.collection).delete(value.id);
+
+		try {
+			await this.pb.collection(this.collection).delete(value.id);
+		} catch (error) {
+			this.handleDelete(previousValue as T, false);
+			throw error;
+		}
 	}
 
 	set(value: T[]): void {

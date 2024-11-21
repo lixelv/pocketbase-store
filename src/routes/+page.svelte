@@ -13,11 +13,10 @@
 	};
 
 	export let data: { computers: TestItem[] };
-
+	let value = '';
 	// export let data: { test: TestItem[] };
 
 	const pb = new PocketBase('https://pocketbase-control-hub.fly.dev/');
-	pb.admins.authWithPassword('controlhub4@gmail.com', 'oqHjDn5Cm_w7jBIlOZVwWhzElP2kfb1S');
 	pb.autoCancellation(false);
 
 	if (browser) {
@@ -28,10 +27,9 @@
 
 	const computersStore = createCollectionStore<TestItem>(
 		pb,
-		'computers',
+		'test',
 		{
-			sort: '-updated',
-			filter: `region.name = "killme232" && region.team.name = "lixelv's team"`
+			sort: '-updated'
 		},
 		data.computers
 	);
@@ -43,5 +41,12 @@
 </script>
 
 {#each $computersStore as item}
-	name - {item.name} <br />
+	name - {item.name} id - {item.id}<br />
 {/each}
+<form
+	on:submit|preventDefault={async () => {
+		await computersStore.create({ name: value });
+	}}
+>
+	<input type="text" bind:value /><button type="submit">add new</button>
+</form>
