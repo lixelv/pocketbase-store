@@ -33,6 +33,7 @@ export class CollectionStore<T extends Record> implements Readable<T[]> {
 
 	// #act: boolean;
 	loaded: boolean;
+	#subscribed: boolean;
 	#unsubscribe?: Unsubscriber;
 	#store: Writable<T[]>;
 	#cache: Cache;
@@ -51,6 +52,7 @@ export class CollectionStore<T extends Record> implements Readable<T[]> {
 
 		// TODO: add writable pocketbase store, now only readable
 		// this.#act = true;
+		this.#subscribed = false;
 		this.#store = writable<T[]>(initialValue || ([] as unknown as T[]));
 		this.#cache = new Cache(options?.expirationTime || EXPIRATION_TIME);
 
@@ -70,7 +72,11 @@ export class CollectionStore<T extends Record> implements Readable<T[]> {
 	}
 
 	async subscribeOnPocketBase() {
-		this.#unsubscribe = await this.pb.collection(this.collection).subscribe(
+		if (this.#subscribed) {
+			return;
+		}
+
+		const unsubscribe = await this.pb.collection(this.collection).subscribe(
 			'*',
 			({ action, record }) => {
 				this.handleSummary({ action, record } as {
@@ -80,6 +86,19 @@ export class CollectionStore<T extends Record> implements Readable<T[]> {
 			},
 			copy(this.options)
 		);
+
+		this.#subscribed = true;
+
+		this.#unsubscribe = async () => {
+			await unsubscribe();
+			this.#subscribed = false;
+		};
+	}
+
+	async unsubscribeFromPocketBase() {
+		if (this.#subscribed) {
+			await this.#unsubscribe?.();
+		}
 	}
 
 	handleCreate(value: T) {
