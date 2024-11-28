@@ -101,11 +101,17 @@ export class CollectionStore<T extends Record> implements Readable<T[]> {
 		}
 	}
 
-	handleCreate(value: T) {
+	handleCreate(value: T, toCache: boolean = true) {
+		if (toCache) {
+			if (this.#cache.has({ action: 'create', record: value.id })) {
+				return;
+			} else {
+				this.#cache.add({ action: 'create', record: value.id });
+			}
+		}
+
 		this.#store.update((s) => {
-			s = s.filter(
-				(item: { id: string }) => item.id !== 'justCreated' && item.id !== value.id
-			) as T[];
+			s = s.filter((item: { id: string }) => item.id !== 'justCreated') as T[];
 
 			if (this.options?.sort) {
 				pocketBaseInsert(s, value, this.options?.sort);
@@ -155,7 +161,7 @@ export class CollectionStore<T extends Record> implements Readable<T[]> {
 		});
 	}
 
-	handleSummary(args: { action: 'create' | 'update' | 'delete' | undefined; record: T }) {
+	handleSummary(args: { action: 'create' | 'update' | 'delete'; record: T }) {
 		// this.#act = false;
 
 		switch (args.action) {
@@ -173,44 +179,44 @@ export class CollectionStore<T extends Record> implements Readable<T[]> {
 		// this.#act = true;
 	}
 
-	async create(value: { [key: string]: any }) {
+	async create(value: { [key: string]: any }): Promise<T> {
 		const insertValue = { ...value, id: 'justCreated', created: getDate(), updated: getDate() };
-		this.handleCreate(insertValue as unknown as T);
+		this.handleCreate(insertValue as unknown as T, false);
 
 		try {
-			await this.pb.collection(this.collection).create(value);
+			return await this.pb.collection(this.collection).create<T>(value);
 		} catch (error) {
 			this.handleDelete(insertValue as unknown as T, false);
 			throw error;
 		}
 	}
 
-	async update_(value: T) {
-		const previousValue = getStore<T[]>(this.#store).find(
-			(item: { id: string }) => item.id === value.id
-		);
+	async update_(value: T): Promise<T> {
+		const previousValue = this.getValue().find((item: { id: string }) => item.id === value.id);
 		this.handleUpdate(value, false);
 
 		try {
-			await this.pb.collection(this.collection).update(value.id, value);
+			return await this.pb.collection(this.collection).update<T>(value.id, value);
 		} catch (error) {
 			this.handleUpdate(previousValue as T, false);
 			throw error;
 		}
 	}
 
-	async delete(value: T) {
-		const previousValue = getStore<T[]>(this.#store).find(
-			(item: { id: string }) => item.id === value.id
-		);
+	async delete(value: T): Promise<boolean> {
+		const previousValue = this.getValue().find((item: { id: string }) => item.id === value.id);
 		this.handleDelete(value);
 
 		try {
-			await this.pb.collection(this.collection).delete(value.id);
+			return await this.pb.collection(this.collection).delete(value.id);
 		} catch (error) {
 			this.handleDelete(previousValue as T, false);
 			throw error;
 		}
+	}
+
+	getValue(): T[] {
+		return getStore<T[]>(this.#store);
 	}
 
 	set(value: T[]): void {

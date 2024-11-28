@@ -1,6 +1,6 @@
 {
 	"name": "pocketbase-store",
-	"version": "0.1.10",
+	"version": "0.1.11",
 	"author": "Simon Efremenko",
 	"license": "MIT",
 	"description": "Svelte store for pocketbase collections and records",
