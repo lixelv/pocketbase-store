@@ -65,7 +65,7 @@ export class ItemStore<T extends Record> implements Writable<T> {
 			this.initialValue = value;
 		});
 
-		if (options?.autoSubGetData ? options.autoSubGetData : true) {
+		if (options?.autoSubGetData !== undefined ? options.autoSubGetData : true) {
 			if (browser) {
 				if (!this.loaded) {
 					this.getData();

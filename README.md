@@ -176,6 +176,29 @@ type ItemSendOptions = {
 };
 ```
 
+## Contributing and Releasing
+
+### Development
+
+1. Fork the repository
+2. Make your changes
+3. Create a pull request
+
+### Publishing a New Version
+
+This library uses GitHub Actions for automated publishing to npm. To release a new version:
+
+1. Update the version number in `package.json`
+2. Commit your changes: `git commit -am "Bump version to x.y.z"`
+3. Create a new tag: `git tag vx.y.z` (where x.y.z is the version number)
+4. Push the changes and tags: `git push && git push --tags`
+
+The GitHub Actions workflow will automatically:
+- Build and test the package
+- Publish to npm when a new tag is pushed
+
+Note: You need to have an NPM_TOKEN secret set up in your GitHub repository settings for the automated publishing to work.
+
 ## LICENSE
 
 MIT License, do what you want with it, this is your responsibility.

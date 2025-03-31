@@ -56,7 +56,7 @@ export class CollectionStore<T extends Record> implements Readable<T[]> {
 		this.#store = writable<T[]>(initialValue || ([] as unknown as T[]));
 		this.#cache = new Cache(options?.expirationTime || EXPIRATION_TIME);
 
-		if (options?.autoSubGetData ? options.autoSubGetData : true) {
+		if (options?.autoSubGetData !== undefined ? options.autoSubGetData : true) {
 			if (browser) {
 				if (!this.loaded) {
 					this.getData();

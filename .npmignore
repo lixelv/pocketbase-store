@@ -1,0 +1,27 @@
+# Development files
+.git/
+.github/
+.vscode/
+node_modules/
+static/
+tests/
+
+# Configuration files
+.prettierrc
+.prettierignore
+.eslintrc
+eslint.config.js
+svelte.config.js
+tsconfig.json
+vite.config.ts
+
+# Build artifacts
+coverage/
+.svelte-kit/
+
+# Misc
+.DS_Store
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*

@@ -75,6 +75,6 @@ function getCompareFunction(expression: string) {
 export function pocketBaseInsert(arr: Record[], element: Record, expression: string = '-created') {
 	const index = binarySearch(arr, element, getCompareFunction(expression));
 
-	arr = arr.splice(index, 0, element);
+	arr.splice(index, 0, element);
 	return index;
 }
