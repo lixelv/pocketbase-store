@@ -123,7 +123,9 @@ export class CollectionStore<T extends Record> implements Readable<T[]> {
 		});
 	}
 
-	handleUpdate(value: T, toCache: boolean = true) {
+	handleUpdate(value: T, toCache: boolean = true, id?: string | undefined) {
+		id = id || value.id;
+
 		if (toCache) {
 			if (
 				this.#cache.has({ action: 'update', record: JSON.stringify({ ...value, updated: '' }) })
@@ -136,10 +138,10 @@ export class CollectionStore<T extends Record> implements Readable<T[]> {
 
 		this.#store.update((s) => {
 			if (this.options?.sort) {
-				s = s.filter((item: { id: string }) => item.id !== value.id) as T[];
+				s = s.filter((item: { id: string }) => item.id !== id) as T[];
 				pocketBaseInsert(s, value, this.options?.sort);
 			} else {
-				s = s.map((item: { id: string }) => (item.id === value.id ? value : item)) as T[];
+				s = s.map((item: { id: string }) => (item.id === id ? value : item)) as T[];
 			}
 
 			return s;
@@ -184,7 +186,10 @@ export class CollectionStore<T extends Record> implements Readable<T[]> {
 		this.handleCreate(insertValue as unknown as T, false);
 
 		try {
-			return await this.pb.collection(this.collection).create<T>(value);
+			const result = await this.pb.collection(this.collection).create<T>(value);
+			this.handleUpdate(result, true, 'justCreated');
+
+			return result;
 		} catch (error) {
 			this.handleDelete(insertValue as unknown as T, false);
 			throw error;
