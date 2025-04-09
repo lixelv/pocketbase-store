@@ -11,46 +11,41 @@
 		collectionId: string;
 		collectionName: string;
 		text: string;
-		ip: string;
 	};
 
-	export let data: { computers: TestItem[] };
 	let value = {
-		text: '',
-		ip: ''
+		text: ''
 	};
 
 	const pb = new PocketBase('https://pocketbase-control-hub.fly.dev/');
 	pb.autoCancellation(false);
 
-	const computersStore = createCollectionStore<TestItem>(
-		pb,
-		'test',
-		{
-			sort: '-updated'
-		},
-		data.computers
-	);
+	const testStore = createCollectionStore<TestItem>(pb, 'test', {
+		sort: '-updated'
+	});
 
-	onMount( async () => {
-		if (browser) {
-			await computersStore.getData();
-	}});
+	onMount(async () => {
+		await testStore.subscribeOnPocketBase();
+		await testStore.getData();
+	});
 
+	onDestroy(async () => {
+		await testStore.unsubscribeFromPocketBase();
+	});
 
-	let ip: null | string = null;
+	// onMount( async () => {
+	// 	if (browser) {}});
 </script>
 
-{#each $computersStore as item}
-	{JSON.stringify(item)}
-	<button on:click={() => computersStore.delete(item)}>delete</button><br />
-{/each}
-<form
-	on:submit|preventDefault={async () => {
-		const result = computersStore.create(value);
-		value.text = '';
-		await result;
-	}}
+<input bind:value={value.text} />
+<button
+	on:click={async () => {
+		console.log(101);
+		await testStore.create(value);
+	}}>Send</button
 >
-	<input type="text" bind:value={value.text} /><button type="submit">add new</button>
-</form>
+<div class="flex flex-col">
+	{#each $testStore as item (item.id)}
+		<p>{item.id} {item.text}</p>
+	{/each}
+</div>

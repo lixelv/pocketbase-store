@@ -66,6 +66,10 @@ export class CollectionStore<T extends Record> implements Readable<T[]> {
 		}
 	}
 
+	updateOptions(options: CollectionSendOptions) {
+		this.options = options;
+	}
+
 	async getData() {
 		const data = await this.pb.collection(this.collection).getFullList<T>(copy(this.options));
 		this.#store.set(data);
@@ -98,6 +102,7 @@ export class CollectionStore<T extends Record> implements Readable<T[]> {
 	async unsubscribeFromPocketBase() {
 		if (this.#subscribed) {
 			await this.#unsubscribe?.();
+			this.#subscribed = false;
 		}
 	}
 
@@ -187,7 +192,10 @@ export class CollectionStore<T extends Record> implements Readable<T[]> {
 
 		try {
 			const result = await this.pb.collection(this.collection).create<T>(value);
-			this.handleUpdate(result, true, 'justCreated');
+
+			if (!this.#subscribed) {
+				this.handleUpdate(result, true, 'justCreated');
+			}
 
 			return result;
 		} catch (error) {
@@ -215,7 +223,7 @@ export class CollectionStore<T extends Record> implements Readable<T[]> {
 		try {
 			return await this.pb.collection(this.collection).delete(value.id);
 		} catch (error) {
-			this.handleDelete(previousValue as T, false);
+			this.handleCreate(previousValue as T, false);
 			throw error;
 		}
 	}
